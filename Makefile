@@ -5,7 +5,7 @@ CC=gcc
 CFLAGS=-pthread
 
 # Source files
-SOURCES=main.c
+SOURCES=main.c src/sobel.c
 
 # Executable name
 EXECUTABLE=ppm-converter
