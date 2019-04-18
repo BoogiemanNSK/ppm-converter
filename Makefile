@@ -2,7 +2,7 @@
 CC=gcc
 
 # Compilator flags
-CFLAGS=-pthread
+CFLAGS=-pthread -lm
 
 # Source files
 SOURCES=main.c src/sobel.c
