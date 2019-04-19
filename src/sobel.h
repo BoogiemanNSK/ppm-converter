@@ -8,6 +8,8 @@
 
 #define KERNEL_SIZE 3
 
-int sobel(struct image *in, struct image *out, int threads);
-int** convolution(int kernel[KERNEL_SIZE][KERNEL_SIZE], 
-		int **origin, int origin_width, int origin_height);
+// Pre-calculated grayscale pixels
+int **origin;
+
+void sobel(struct image *in, int threads);
+void * convolution(void *args);

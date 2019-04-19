@@ -37,40 +37,36 @@ int read_args(int argc, char **argv, char **input_file, char **output_file, int 
 	return 0;
 }
 
-int read_image(struct image *in)
+void read_image(struct image *in)
 {
-  	FILE *f;
+	FILE *f;
 
 	if ((f = fopen(in->path, "r")) == NULL) {
 		printf("[ERROR] Could not open input file for reading!\n");
-    		return -1;
-  	}
+	}
 
-  	in->format = malloc(FORMAT_STRING_SIZE);
-  	fscanf(f, "%s %d %d %d", in->format, &(in->width), &(in->height), &(in->max_val));
+	in->format = malloc(FORMAT_STRING_SIZE);
+	fscanf(f, "%s %d %d %d", in->format, &(in->width), &(in->height), &(in->max_val));
 
-  	in->matrix = (struct pixel ***)malloc(sizeof(struct pixel **) * in->height);
-  	for (int i = 0; i < in->height; i++) {
-  		in->matrix[i] = (struct pixel **)malloc(sizeof(struct pixel *) * in->width);
-    		for (int j = 0; j < in->width; j++) {
-      			in->matrix[i][j] = (struct pixel *)malloc(sizeof(struct pixel));
-      			fscanf(f, "%d %d %d", &(in->matrix[i][j]->r), 
+ 	in->matrix = (struct pixel ***)malloc(sizeof(struct pixel **) * in->height);
+ 	for (int i = 0; i < in->height; i++) {
+ 		in->matrix[i] = (struct pixel **)malloc(sizeof(struct pixel *) * in->width);
+   		for (int j = 0; j < in->width; j++) {
+   			in->matrix[i][j] = (struct pixel *)malloc(sizeof(struct pixel));
+   			fscanf(f, "%d %d %d", &(in->matrix[i][j]->r), 
 			      &(in->matrix[i][j]->g), &(in->matrix[i][j]->b));
-    		}
-  	}
+   		}
+ 	}
 
-  	fclose(f);
-
-  	return 0;
+ 	fclose(f);
 }
 
-int write_image(struct image *out)
+void write_image(struct image *out)
 {
 	FILE *f;
 
   	if ((f = fopen(out->path, "w")) == NULL) {
   		printf("[ERROR] Could not open output file for writing!\n");
-  		return -1;
   	}
 
   	fprintf(f, "%s\n%d %d\n%d\n", out->format, out->width, out->height, out->max_val);
@@ -84,14 +80,11 @@ int write_image(struct image *out)
   	}
 
   	fclose(f);
-
-  	return 0;
 }
 
 int main(int argc, char **argv)
 {
-  	struct image *in = (struct image*)malloc(sizeof(struct image));
-  	struct image *out = (struct image*)malloc(sizeof(struct image));
+  	struct image *img = (struct image*)malloc(sizeof(struct image));
   
   	char *input_file = NULL;
   	char *output_file = NULL;
@@ -101,23 +94,13 @@ int main(int argc, char **argv)
   	err = read_args(argc, argv, &input_file, &output_file, &threads_num);
   	if (err != 0) { return err; }
 
-  	in->path = input_file;
+  	img->path = input_file;
+  	read_image(img);
 
-  	err = read_image(in);
-  	if (err != 0) { return err; }
-
-  	out->path = output_file;
-  	out->format = in->format;
-  	out->height = in->height;
-  	out->width = in->width;
-  	out->max_val = in->max_val;
-  	out->matrix = in->matrix;
-
-  	err = sobel(in, out, threads_num);
-  	if (err != 0) { return err; }
-  
-  	err = write_image(out);
-  	if (err != 0) { return err; }
+  	sobel(img, threads_num);
+  	
+	img->path = output_file;  
+	write_image(img);
 
   	return 0;
 }
