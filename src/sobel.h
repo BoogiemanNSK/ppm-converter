@@ -1,4 +1,4 @@
-#include <time.h>
+#include <sys/time.h>
 #include <math.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -6,6 +6,7 @@
 
 #include "structures.h"
 
+// Size of a kernel matrix, that is used for sobel transforamtion
 #define KERNEL_SIZE 3
 
 // Pre-calculated grayscale pixels

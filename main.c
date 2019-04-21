@@ -6,6 +6,11 @@
 
 #define FORMAT_STRING_SIZE 4
 
+/*
+ * Function to read arguments into variables.
+ * Input and Output files are necessary and threads number is optional.
+ * Returns -1 in case of missed parameters.
+ */
 int read_args(int argc, char **argv, char **input_file, char **output_file, int *threads_num)
 {
 	for (int i = 1; i < argc; i++) {
@@ -37,6 +42,9 @@ int read_args(int argc, char **argv, char **input_file, char **output_file, int 
 	return 0;
 }
 
+/*
+ * Parses data from specified file path to the image structure.
+ */
 void read_image(struct image *in)
 {
 	FILE *f;
@@ -61,6 +69,9 @@ void read_image(struct image *in)
  	fclose(f);
 }
 
+/*
+ * Writes data from resulting structure to the specified file.
+ */
 void write_image(struct image *out)
 {
 	FILE *f;
@@ -82,6 +93,9 @@ void write_image(struct image *out)
   	fclose(f);
 }
 
+/*
+ * MAIN
+ */
 int main(int argc, char **argv)
 {
   	struct image *img = (struct image*)malloc(sizeof(struct image));

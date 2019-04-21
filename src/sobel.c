@@ -1,14 +1,24 @@
 #include "sobel.h"
 
+// Kernel matrices
 const int gx_kernel[KERNEL_SIZE][KERNEL_SIZE] =
 		{{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
 const int gy_kernel[KERNEL_SIZE][KERNEL_SIZE] =
 		{{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 
+/*
+ * Sobel transformation function.
+ * The result of a transformaion will be stored back in the passed image structure.
+ * Time that is required to perform a transformation will be printed to the console.
+ * Execution is separated between specified number of threads, each of them will 
+ * count their part of image (equally distributed).
+ */
 void sobel(struct image *in, int threads)
 {
-	clock_t begin = clock();
+	struct timeval t0, t1;
+	gettimeofday(&t0, 0);
 
+	// Transforming original image to grayscale (mid value of colors)
 	origin = (int**)malloc(sizeof(int*) * in->height);
 	for (int i = 0; i < in->height; i++) {
 		origin[i] = (int*)malloc(sizeof(int) * in->width);
@@ -19,6 +29,7 @@ void sobel(struct image *in, int threads)
 		}
 	}
 
+	// Threads separated execution
 	struct convolution_args *args;
 	int block = (in->height * in->width) / threads;
 	pthread_t *ts = (pthread_t *)malloc(sizeof(pthread_t) * threads);
@@ -30,16 +41,28 @@ void sobel(struct image *in, int threads)
 		pthread_create(&ts[i], NULL, convolution, args);
 	}
 
+	// Waiting when all threads are finished their work.
 	for (int i = 0; i < threads; i++) {
 		pthread_join(ts[i], NULL);
 	}
 
 	free(origin);
 
-	clock_t end = clock();
-	printf("Time taken: %.1f ms\n", 1000.0f * ((float)(end - begin) / CLOCKS_PER_SEC));
+	// Printing real time of execution
+	gettimeofday(&t1, 0);
+	long dsec = t1.tv_sec - t0.tv_sec;
+	long dusec = t1.tv_usec - t0.tv_usec;
+	if (dusec < 0) { dsec--; dusec += 1000000; }
+
+	long elapsed = dsec * 1000 + dusec / 1000;
+	printf("Time taken: %ld ms\n", elapsed);
 }
 
+/*
+ * Threads-handled part of Sobel transormation.
+ * Passed argument has to be a filled structure convolution_args.
+ * Result will be saved back to the passed structure.
+ */
 void * convolution(void *args)
 {
 	struct convolution_args *in = args;
@@ -52,6 +75,7 @@ void * convolution(void *args)
 		gx = 0;
 		gy = 0;
 
+		// Transformation of one pixel with horizontal kernel
 		for (int a = 0; a < KERNEL_SIZE; a++) {
 			for (int b = 0; b < KERNEL_SIZE; b++) {
 				int x = column - b + 1;
@@ -67,6 +91,7 @@ void * convolution(void *args)
 			}
 		}
 
+		// Transformation of one pixel with vertical kernel
 		for (int a = 0; a < KERNEL_SIZE; a++) {
 			for (int b = 0; b < KERNEL_SIZE; b++) {
 				int x = column - b + 1;
@@ -82,9 +107,11 @@ void * convolution(void *args)
 			}
 		}
 
+		// Sum of transformation
 		res = sqrt(gx * gx + gy * gy);
 		res = res < in->img->max_val ? res : in->img->max_val;
 		
+		// Writing back result
 		in->img->matrix[row][column]->r = res;
 		in->img->matrix[row][column]->g = res;
 		in->img->matrix[row][column]->b = res;
